@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<!-- The previous line tells the browser, that the page uses the HTML5 standard. -->
+
+<html>
+
+<head>
+    <title>Assignment</title>
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+    <!-- The following meta line optimizes the site for mobile devices. It sets the viewport size 
+          to the screen size, so it will be displayed maximized, but unscaled. -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+
+    <!-- Include Three.js libraries -->
+    <script src="js/three.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <script src="js/Detector.js"></script>
+    <script src="js/EventDispatcher.js"></script>
+    <script src="myjs/LivingRoom.js"></script>
+    <script src="myjs/textOutsideHome.js"></script>
+    <script src="myjs/bathroom.js"></script>
+    <script src="myjs/kitchen.js"></script>
+    <script src="myjs/Bedroom.js"></script>
+    <script src="myjs/fence.js"></script>
+    <script src="myjs/storey.js"></script>
+    <script src="myjs/keyEvents.js"></script>
+    <script src="myjs/instruction.js"></script>
+    <script src="myjs/Animation.js"></script>
+</head>
+
+<body>
+
+    <center>
+        <div id="mycontainer"></div>
+    </center>
+
+    <div id="overlaytext" style="position: absolute; top: -30px; left: 100px">
+        <canvas id="practical-WebGL" width="500" height="500"></canvas>
+
+    </div>
+    <!-- This JavaScript block encloses the Three.js commands -->
+    <script>
+        var roundMirror, roundMirrorCamera;
+        var scene = new THREE.Scene();
+        var x = 0;
+        var y = 0;
+        var z = 0;
+        var t = 0;
+        var xSpeed = 5;
+        var sec = 0;
+        var KichtenLight1, KichtenLight2, KichtenLight3, Door, moonLight,
+            moonGeo, LampBox, animateBoxGeo;
+        var TVvideo, video, screenContext, videoTexture, TV;
+
+  // set camera satart poition
+        camera = new THREE.PerspectiveCamera(70, window.innerWidth /
+            window.innerHeight, 1, 10000);
+        camera.position.set(500, 600, 650);
+
+        // create controls for camera using OrbitControls.js
+        var controls;
+        controls = new THREE.OrbitControls(camera);
+        controls.keys = {
+            LEFT: 65, //left arrow
+            UP: 87, // up arrow
+            RIGHT: 68, // right arrow
+            BOTTOM: 83, // down arrow
+        }
+        // seting target of our orbital contorler 
+        controls.target = new THREE.Vector3(-400, -20, -300);
+
+        // create render and enable shadow map also set size of render 
+        var renderer = new THREE.WebGLRenderer();
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+		document.body.appendChild(renderer.domElement);
+
+        // create soft white ambient light
+        var light = new THREE.AmbientLight(0x404040);
+        scene.add(light);
+
+
+        // global textulre for outside wall 
+        var textureOpenWall = new THREE.TextureLoader().load(
+            'images/WallsAndBase/insideWall.jpg');
+        var textureBumpMapOpenWall = new THREE.TextureLoader().load(
+            'images/WallsAndBase/insideWall-bump-map.jpg');
+        var textureNormalMapOpenWall = new THREE.TextureLoader().load(
+            'images/WallsAndBase/insideWallnormal.jpg');
+        // material is phong material to see better how work bump map and normal map
+        var isnsideWallMaterial = new THREE.MeshPhongMaterial(
+        {
+            map: textureOpenWall,
+            bumpMap: textureBumpMapOpenWall,
+            normalMap: textureNormalMapOpenWall
+        });
+
+
+        // texture for wall inside house  
+        var textureinsideWall = new THREE.TextureLoader().load(
+            'images/WallsAndBase/brickwall.jpg');
+        var textureBumpMapinsideWall = new THREE.TextureLoader().load(
+            'images/WallsAndBase/brickwallbump-map.jpg');
+        // material is phong material 
+        var openWallMaterial = new THREE.MeshLambertMaterial(
+        {
+            map: textureinsideWall,
+        });
+		//because of diffrent sizes I wrap texture to look all wall more realistic and simillar
+        textureinsideWall.wrapS = textureOpenWall.wrapT = THREE.ReapeatWraping;
+        textureinsideWall.repeat.set(4, 1);
+
+
+
+        // texture for base of my house
+        var texturemarlbe = new THREE.TextureLoader().load(
+            'images/WallsAndBase/marlbe.jpg');
+        var baseMaterial = new THREE.MeshPhongMaterial(
+        {
+            map: texturemarlbe
+        });
+
+
+
+        // changing background for night texture
+        scene.background = new THREE.TextureLoader().load(
+            'images/night.jpg');
+
+
+
+      
+
+
+
+
+        // function to create scene 
+        function creatingSCene()
+        {
+
+            var baseGeometry = new THREE.BoxGeometry(1710, 40, 810);
+            var base = new THREE.Mesh(baseGeometry, baseMaterial);
+            base.position.set(-400, -20, -300)
+            base.receiveShadow = true;
+            scene.add(base);
+            // texte outside home 
+            textOutsideHome();
+			createMoonAndLampBox();
+
+            //Create Bathroom	
+            createFloor();
+            createWalls();
+            createShower();
+            createSink();
+
+            //Create living Room
+            createLivingRoomWalls();
+            createLivingRoomFloor();
+            createLivingRoomWardrobe();
+            createLivingRoomTable();
+            createLivingRoomPoufes();
+            createLivingRoomMirror();
+            createLivingRoomLamp();
+            createDoor();
+            createTvSet();
+
+            //Create Bedroom
+            createBedroomWalls();
+            createBedroomFloor();
+            createBedroomBed();
+            createBedroomLamps();
+
+            //Create Kitchen
+            createKitchenFloor();
+            createKitchenWalls();
+            createKitchen();
+
+            //Create Fence
+            fence();
+
+            //Create storey
+            createLadder();
+            createstorey();
+
+            //events
+            keyEvents();
+
+        }
+
+
+
+
+        // render fucntion
+        function render()
+        {
+
+            screenContext.drawImage(TVvideo, 0, 0);
+            videoTexture.needsUpdate = true;
+
+            animation();
+            // used to create mirror
+            roundMirrorCamera.updateCubeMap(renderer, scene);
+            roundMirror.visible = true;
+            renderer.render(scene, camera);
+            // used to set fps on 30 not 60
+            setTimeout(function()
+            {
+                requestAnimationFrame(render);
+            }, 1000 / 30);
+
+        }
+        // assign object a instruction
+        Object.assign(Instruction.prototype, EventDispatcher.prototype);
+        // create isntructio as object
+        var Instruction = new Instruction();
+
+        // set instruction to previous created object
+        Instruction.addEventListener('start', function(event)
+        {
+
+            alert(event.message);
+
+        });
+        // start instruction at the beggining of the project
+        Instruction.start();
+
+        // creating scene
+        creatingSCene();
+        
+        // create big welcome text outside home 
+        textOutsideHome();
+        // stop tv at the start
+        TVvideo.pause();
+        // start render
+        render();
+    </script>
+</body>
+
+</html>
